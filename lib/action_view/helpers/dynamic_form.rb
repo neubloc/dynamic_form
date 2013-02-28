@@ -151,6 +151,7 @@ module ActionView
       # * <tt>:message</tt> - The explanation message after the header message and before
       #   the error list.  Pass +nil+ or an empty string to avoid the explanation message
       #   altogether. (Default: "There were problems with the following fields:").
+      # * <tt>:skip</tt> - Will not print associated with error field name.
       #
       # To specify the display for one object, you simply provide its name as a parameter.
       # For example, for the <tt>@user</tt> model:
@@ -222,7 +223,13 @@ module ActionView
             message = options.include?(:message) ? options[:message] : locale.t(:body)
 
             error_messages = objects.sum do |object|
-              object.errors.full_messages.map do |msg|
+              if options[:skip]
+                errors = object.errors.messages.to_a.collect!{ |error| error[1] }.flatten!
+              else
+                errors = object.errors.full_messages
+              end
+
+              errors.map do |msg|
                 content_tag(:li, msg)
               end
             end.join.html_safe
